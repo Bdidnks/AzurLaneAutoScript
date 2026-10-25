@@ -164,6 +164,28 @@ class ProcessManager:
                 if e is not None:
                     AzurLaneAutoScript.stop_event = e
                 AzurLaneAutoScript(config_name=config_name).loop()
+            elif func in ("daily_close_game", "daily_close_emulator"):
+                from module.device.app_control import AppControl
+                from module.device.platform import Platform
+                from module.exception import EmulatorNotRunningError
+
+                config = AzurLaneConfig(config_name=config_name)
+                app = None
+                try:
+                    app = AppControl(config)
+                    app.app_stop()
+                except EmulatorNotRunningError:
+                    logger.info("Emulator is already stopped")
+                except Exception:
+                    logger.exception("Scheduled game stop failed")
+                    if func == "daily_close_game":
+                        raise
+                if func == "daily_close_emulator":
+                    controller = Platform.for_offline_control(
+                        config, serial=app.serial if app is not None else None
+                    )
+                    if not controller.emulator_stop():
+                        logger.warning("Scheduled emulator stop is unsupported or failed")
             elif func in get_available_func():
                 from alas import AzurLaneAutoScript
 

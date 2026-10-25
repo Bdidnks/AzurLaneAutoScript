@@ -52,7 +52,7 @@
     },
     "DailySchedule": {
       "name": "Daily schedule",
-      "help": "These settings are saved, but scheduled start and stop are not active yet."
+      "help": "Keep WebUI running. Start or stop this instance each day using the computer local time. Start behaves like the Start button."
     },
     "Main": {
       "name": "Main",
@@ -574,11 +574,11 @@
   "DailySchedule": {
     "_info": {
       "name": "Daily run window",
-      "help": "These settings are saved, but scheduled start and stop are not active yet."
+      "help": "Keep WebUI running. Start or stop this instance each day using the computer local time. Start behaves like the Start button."
     },
     "StartEnabled": {
       "name": "Start automatically each day",
-      "help": "These settings are saved, but scheduled start and stop are not active yet.",
+      "help": "At the start time, perform the same action as the Start button.",
       "True": "Enabled",
       "False": "Disabled"
     },
@@ -588,13 +588,20 @@
     },
     "StopEnabled": {
       "name": "Stop automatically each day",
-      "help": "These settings are saved, but scheduled start and stop are not active yet.",
+      "help": "At the stop time, end the current ALAS task, then perform the selected stop action.",
       "True": "Enabled",
       "False": "Disabled"
     },
     "StopTime": {
       "name": "Stop time",
       "help": "Use the computer local time in 24-hour HH:MM format."
+    },
+    "StopAction": {
+      "name": "Stop action",
+      "help": "Action after stopping ALAS tasks. Closing the emulator is currently supported on Windows only. If start and stop times match, stop takes priority.",
+      "stop_tasks": "Stop ALAS tasks only",
+      "close_game": "Stop tasks and close game",
+      "close_emulator": "Stop tasks and close emulator"
     }
   },
   "DropRecord": {

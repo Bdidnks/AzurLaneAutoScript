@@ -82,7 +82,8 @@
       "StartEnabled": false,
       "StartTime": "00:00",
       "StopEnabled": false,
-      "StopTime": "00:00"
+      "StopTime": "00:00",
+      "StopAction": "stop_tasks"
     },
     "Storage": {
       "Storage": {}

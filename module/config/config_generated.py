@@ -48,6 +48,7 @@ class GeneratedConfig:
     DailySchedule_StartTime = '00:00'
     DailySchedule_StopEnabled = False  # True, False
     DailySchedule_StopTime = '00:00'
+    DailySchedule_StopAction = 'stop_tasks'  # stop_tasks, close_game, close_emulator
 
     # Group `DropRecord`
     DropRecord_SaveFolder = './screenshots'

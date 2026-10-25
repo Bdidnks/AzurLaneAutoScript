@@ -104,6 +104,7 @@ DailySchedule:
   StartTime:
     value: '00:00'
     valuetype: str
+    validate: '(?:[01]\d|2[0-3]):[0-5]\d'
   StopEnabled:
     type: checkbox
     value: false
@@ -111,6 +112,10 @@ DailySchedule:
   StopTime:
     value: '00:00'
     valuetype: str
+    validate: '(?:[01]\d|2[0-3]):[0-5]\d'
+  StopAction:
+    value: stop_tasks
+    option: [ stop_tasks, close_game, close_emulator ]
 
 DropRecord:
   SaveFolder: ./screenshots

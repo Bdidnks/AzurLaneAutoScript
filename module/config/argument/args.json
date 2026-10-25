@@ -440,7 +440,8 @@
       "StartTime": {
         "type": "input",
         "value": "00:00",
-        "valuetype": "str"
+        "valuetype": "str",
+        "validate": "(?:[01]\\d|2[0-3]):[0-5]\\d"
       },
       "StopEnabled": {
         "type": "checkbox",
@@ -453,7 +454,17 @@
       "StopTime": {
         "type": "input",
         "value": "00:00",
-        "valuetype": "str"
+        "valuetype": "str",
+        "validate": "(?:[01]\\d|2[0-3]):[0-5]\\d"
+      },
+      "StopAction": {
+        "type": "select",
+        "value": "stop_tasks",
+        "option": [
+          "stop_tasks",
+          "close_game",
+          "close_emulator"
+        ]
       }
     },
     "Storage": {

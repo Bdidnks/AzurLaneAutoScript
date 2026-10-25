@@ -54,6 +54,14 @@ class PlatformBase(Connection, EmulatorManagerBase):
     - emulator_stop()
     """
 
+    @classmethod
+    def for_offline_control(cls, config, serial=None):
+        """Create a controller without connecting to or starting the emulator."""
+        controller = cls.__new__(cls)
+        controller.config = config
+        controller.serial = str(serial or config.Emulator_Serial)
+        return controller
+
     def emulator_start(self):
         """
         Start a emulator, until startup completed.

@@ -58,6 +58,7 @@ from module.submodule.submodule import load_config
 from module.submodule.utils import get_config_mod
 from module.webui.base import Frame
 from module.webui.discord_presence import close_discord_rpc, init_discord_rpc
+from module.webui.daily_schedule import DailySchedule
 from module.webui.fastapi import asgi_app
 from module.webui.lang import _t, t
 from module.webui.patch import fix_py37_subprocess_communicate, patch_executor, patch_mimetype
@@ -95,6 +96,7 @@ patch_executor()
 patch_mimetype()
 fix_py37_subprocess_communicate()
 task_handler = TaskHandler()
+daily_schedule = DailySchedule()
 
 
 class AlasGUI(Frame):
@@ -1549,6 +1551,7 @@ def app():
             lambda: ProcessManager.restart_processes(
                 instances=instances, ev=updater.event
             ),
+            lambda: task_handler.add(daily_schedule.tick, 15),
         ],
         on_shutdown=[clearup],
     )
