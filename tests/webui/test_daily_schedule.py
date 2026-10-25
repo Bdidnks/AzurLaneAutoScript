@@ -21,7 +21,8 @@ class TestDailySchedule(TestCase):
     def test_start_and_stop_use_existing_process_controls(self):
         from unittest.mock import Mock
         manager = Mock()
-        manager.alive = False
+        manager.alive = True
+        manager.stop.side_effect = lambda: setattr(manager, 'alive', False)
         with patch('module.webui.daily_schedule.ProcessManager.get_manager', return_value=manager):
             DailySchedule.run_action('test', 'start', 'stop_tasks')
             from module.webui.updater import updater
@@ -29,10 +30,16 @@ class TestDailySchedule(TestCase):
             DailySchedule.run_action('test', 'stop', 'stop_tasks')
             manager.stop.assert_called_once_with()
             self.assertEqual(manager.start.call_count, 1)
+            manager.alive = True
             DailySchedule.run_action('test', 'stop', 'close_game')
             manager.start.assert_called_with('daily_close_game')
+            manager.alive = True
             DailySchedule.run_action('test', 'stop', 'close_emulator')
             manager.start.assert_called_with('daily_close_emulator')
+            manager.alive = False
+            count = manager.start.call_count
+            DailySchedule.run_action('test', 'stop', 'close_emulator')
+            self.assertEqual(manager.start.call_count, count)
 
     def test_invalid_time(self):
         settings = dict(StartEnabled=True, StartTime='24:00')

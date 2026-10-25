@@ -49,10 +49,12 @@ class DailySchedule:
             manager.start(None, updater.event)
             return
         logger.info(f'Daily schedule: Stop [{name}], action={stop_action}')
+        was_running = manager.alive
         manager.stop()
         if manager.alive:
             raise RuntimeError(f'[{name}] is still running after stop')
-        if stop_action in ('close_game', 'close_emulator'):
+        # Another game may already be using the emulator after ALAS was stopped manually.
+        if was_running and stop_action in ('close_game', 'close_emulator'):
             manager.start(f'daily_{stop_action}')
 
     def tick(self, now=None):
