@@ -96,6 +96,22 @@ Optimization:
   WhenTaskQueueEmpty:
     value: goto_main
     option: [ stay_there, goto_main, close_game, close_emulator ]
+DailySchedule:
+  StartEnabled:
+    type: checkbox
+    value: false
+    option: [ true, false ]
+  StartTime:
+    value: '00:00'
+    valuetype: str
+  StopEnabled:
+    type: checkbox
+    value: false
+    option: [ true, false ]
+  StopTime:
+    value: '00:00'
+    valuetype: str
+
 DropRecord:
   SaveFolder: ./screenshots
   AzurStatsID: null

@@ -50,6 +50,10 @@
       "name": "重启设置",
       "help": ""
     },
+    "DailySchedule": {
+      "name": "定时任务设置",
+      "help": "此页面目前只保存设置；定时启动和停止尚未执行。"
+    },
     "Main": {
       "name": "主线图",
       "help": ""
@@ -565,6 +569,32 @@
       "goto_main": "前往主界面",
       "close_game": "关闭游戏",
       "close_emulator": "关闭模拟器"
+    }
+  },
+  "DailySchedule": {
+    "_info": {
+      "name": "每日运行时段",
+      "help": "此页面目前只保存设置；定时启动和停止尚未执行。"
+    },
+    "StartEnabled": {
+      "name": "每日自动启动",
+      "help": "此页面目前只保存设置；定时启动和停止尚未执行。",
+      "True": "已启用",
+      "False": "未启用"
+    },
+    "StartTime": {
+      "name": "启动时间",
+      "help": "使用电脑本地时间，格式为 HH:MM（24 小时制）。"
+    },
+    "StopEnabled": {
+      "name": "每日自动停止",
+      "help": "此页面目前只保存设置；定时启动和停止尚未执行。",
+      "True": "已启用",
+      "False": "未启用"
+    },
+    "StopTime": {
+      "name": "停止时间",
+      "help": "使用电脑本地时间，格式为 HH:MM（24 小时制）。"
     }
   },
   "DropRecord": {

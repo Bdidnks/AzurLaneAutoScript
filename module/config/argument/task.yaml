@@ -21,6 +21,8 @@ Alas:
       - OldRetire
     Restart:
       - Scheduler
+    DailySchedule:
+      - DailySchedule
 
 # ==================== Farm ====================
 

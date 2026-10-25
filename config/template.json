@@ -77,6 +77,17 @@
       "Storage": {}
     }
   },
+  "DailySchedule": {
+    "DailySchedule": {
+      "StartEnabled": false,
+      "StartTime": "00:00",
+      "StopEnabled": false,
+      "StopTime": "00:00"
+    },
+    "Storage": {
+      "Storage": {}
+    }
+  },
   "Main": {
     "Scheduler": {
       "Enable": false,

@@ -43,6 +43,12 @@ class GeneratedConfig:
     Optimization_TaskHoardingDuration = 0
     Optimization_WhenTaskQueueEmpty = 'goto_main'  # stay_there, goto_main, close_game, close_emulator
 
+    # Group `DailySchedule`
+    DailySchedule_StartEnabled = False  # True, False
+    DailySchedule_StartTime = '00:00'
+    DailySchedule_StopEnabled = False  # True, False
+    DailySchedule_StopTime = '00:00'
+
     # Group `DropRecord`
     DropRecord_SaveFolder = './screenshots'
     DropRecord_AzurStatsID = None

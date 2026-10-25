@@ -427,6 +427,44 @@
       }
     }
   },
+  "DailySchedule": {
+    "DailySchedule": {
+      "StartEnabled": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
+      },
+      "StartTime": {
+        "type": "input",
+        "value": "00:00",
+        "valuetype": "str"
+      },
+      "StopEnabled": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
+      },
+      "StopTime": {
+        "type": "input",
+        "value": "00:00",
+        "valuetype": "str"
+      }
+    },
+    "Storage": {
+      "Storage": {
+        "type": "storage",
+        "value": {},
+        "valuetype": "ignore",
+        "display": "disabled"
+      }
+    }
+  },
   "Main": {
     "Scheduler": {
       "Enable": {

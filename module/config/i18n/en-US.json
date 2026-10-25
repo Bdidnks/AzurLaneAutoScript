@@ -50,6 +50,10 @@
       "name": "Restart",
       "help": ""
     },
+    "DailySchedule": {
+      "name": "Daily schedule",
+      "help": "These settings are saved, but scheduled start and stop are not active yet."
+    },
     "Main": {
       "name": "Main",
       "help": ""
@@ -565,6 +569,32 @@
       "goto_main": "Goto Main Page",
       "close_game": "Close Game",
       "close_emulator": "Close Emulator"
+    }
+  },
+  "DailySchedule": {
+    "_info": {
+      "name": "Daily run window",
+      "help": "These settings are saved, but scheduled start and stop are not active yet."
+    },
+    "StartEnabled": {
+      "name": "Start automatically each day",
+      "help": "These settings are saved, but scheduled start and stop are not active yet.",
+      "True": "Enabled",
+      "False": "Disabled"
+    },
+    "StartTime": {
+      "name": "Start time",
+      "help": "Use the computer local time in 24-hour HH:MM format."
+    },
+    "StopEnabled": {
+      "name": "Stop automatically each day",
+      "help": "These settings are saved, but scheduled start and stop are not active yet.",
+      "True": "Enabled",
+      "False": "Disabled"
+    },
+    "StopTime": {
+      "name": "Stop time",
+      "help": "Use the computer local time in 24-hour HH:MM format."
     }
   },
   "DropRecord": {
