@@ -65,8 +65,12 @@ class PlatformBase(Connection, EmulatorManagerBase):
     def emulator_stop(self):
         """
         Stop a emulator.
+
+        Returns:
+            bool: Whether emulator stop is supported and successful.
         """
         logger.info(f'Current platform {sys.platform} does not support emulator_stop, skip')
+        return False
 
     @cached_property
     def emulator_info(self) -> EmulatorInfo:

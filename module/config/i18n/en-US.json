@@ -560,10 +560,11 @@
     },
     "WhenTaskQueueEmpty": {
       "name": "When Task Queue is Empty",
-      "help": "Close AL when there are no pending tasks, can help reduce CPU",
+      "help": "Close the game or emulator while waiting to reduce resource usage. Automatic emulator closing is currently implemented on Windows; ALAS will try to restart it when the next task is due.",
       "stay_there": "Stay There",
       "goto_main": "Goto Main Page",
-      "close_game": "Close Game"
+      "close_game": "Close Game",
+      "close_emulator": "Close Emulator"
     }
   },
   "DropRecord": {

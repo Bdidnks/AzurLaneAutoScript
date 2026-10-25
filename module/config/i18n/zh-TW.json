@@ -560,10 +560,11 @@
     },
     "WhenTaskQueueEmpty": {
       "name": "當任務隊列清空後",
-      "help": "無任務時關閉遊戲，能在收菜期間降低 CPU 佔用",
+      "help": "無任務時關閉遊戲或模擬器，以降低等待期間的資源佔用；自動關閉模擬器目前僅由 Windows 平台實作，關閉後 ALAS 會在下次任務觸發時嘗試重新啟動",
       "stay_there": "停在原處",
       "goto_main": "前往主界面",
-      "close_game": "關閉遊戲"
+      "close_game": "關閉遊戲",
+      "close_emulator": "關閉模擬器"
     }
   },
   "DropRecord": {

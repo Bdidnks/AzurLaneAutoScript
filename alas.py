@@ -519,6 +519,26 @@ class AzurLaneAutoScript:
                         self.config.task_call('Restart')
                         del_cached_property(self, 'config')
                         continue
+                elif method == 'close_emulator':
+                    logger.info('Close emulator during wait')
+                    self.device.app_stop()
+                    release_resources()
+                    self.device.release_during_wait()
+                    try:
+                        if self.device.emulator_stop():
+                            logger.info('Emulator stopped successfully')
+                        else:
+                            logger.warning('Emulator stop is not supported or failed; keep waiting')
+                    except Exception as e:
+                        logger.warning(f'Failed to stop emulator: {e}')
+                    del_cached_property(self, 'device')
+                    if not self.wait_until(task.next_run):
+                        del_cached_property(self, 'config')
+                        continue
+                    if task.command != 'Restart':
+                        self.config.task_call('Restart')
+                        del_cached_property(self, 'config')
+                        continue
                 elif method == 'goto_main':
                     logger.info('Goto main page during wait')
                     self.run('goto_main')

@@ -560,10 +560,11 @@
     },
     "WhenTaskQueueEmpty": {
       "name": "当任务队列清空后",
-      "help": "无任务时关闭游戏，能在收菜期间降低 CPU 占用",
+      "help": "无任务时关闭游戏或模拟器以降低等待期间的资源占用；自动关闭模拟器目前仅由 Windows 平台实现，关闭后 ALAS 会在下次任务触发时尝试重新启动",
       "stay_there": "停在原处",
       "goto_main": "前往主界面",
-      "close_game": "关闭游戏"
+      "close_game": "关闭游戏",
+      "close_emulator": "关闭模拟器"
     }
   },
   "DropRecord": {
