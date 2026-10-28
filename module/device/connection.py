@@ -779,9 +779,17 @@ class Connection(ConnectionAttr):
             logger.info(f'"{self.serial}" seems to be a Android serial, skip adb connect')
             return True
 
-        # Try to connect
+        # Try to connect. ADB may reset this socket even after host:devices succeeds.
+        reset_attempt = 0
         for _ in range(3):
-            msg = self.adb_client.connect(self.serial)
+            while 1:
+                try:
+                    msg = self.adb_client.connect(self.serial)
+                    break
+                except ConnectionResetError as error:
+                    if not self._recover_adb_reset('host:connect', reset_attempt, error):
+                        raise RequestHumanTakeover from error
+                    reset_attempt += 1
             logger.info(msg)
             # Connected to 127.0.0.1:59865
             # Already connected to 127.0.0.1:59865
@@ -886,8 +894,13 @@ class Connection(ConnectionAttr):
             Reboot adb client
         """
         logger.info('Restart adb')
-        # Kill current client
-        self.adb_client.server_kill()
+        # Kill current client. A reset connection may prevent the protocol command
+        # from reaching the server, so fall back to the adb executable.
+        try:
+            self.adb_client.server_kill()
+        except (ConnectionResetError, ConnectionAbortedError, OSError) as error:
+            logger.warning(f'ADB server kill request failed: {error}; trying adb kill-server')
+            self.subprocess_run([self.adb_binary, 'kill-server'])
         # Init adb client
         del_cached_property(self, 'adb_client')
         self.release_resource()
@@ -1007,31 +1020,60 @@ class Connection(ConnectionAttr):
         logger.attr('Device Orientation', f'{o} ({Connection._orientation_description.get(o, "Unknown")})')
         return o
 
+    def _recover_adb_reset(self, stage, attempt, error):
+        """Retry a local ADB socket, then restart the shared server at most once."""
+        logger.error(f'ADB {stage} connection reset (attempt {attempt + 1}/3): {error}')
+        if attempt == 0:
+            # adbutils opens a new socket for every request.
+            logger.warning('Retrying the local ADB connection')
+            time.sleep(0.5)
+            return True
+        if attempt == 1 and self.config.Emulator_AdbRestart:
+            now = time.monotonic()
+            last_restart = getattr(self, '_adb_reset_last_restart', None)
+            if last_restart is not None and now - last_restart < 60:
+                logger.warning('ADB server restart skipped: another restart was attempted within 60 seconds')
+            else:
+                self._adb_reset_last_restart = now
+                logger.warning('Local ADB connection still resets; restarting the ADB server once')
+                try:
+                    self.adb_restart()
+                except Exception as recovery_error:
+                    logger.warning(f'ADB server restart failed: {recovery_error}')
+                try:
+                    self.adb_start_server()
+                except Exception as recovery_error:
+                    logger.warning(f'ADB server start failed: {recovery_error}')
+                time.sleep(1)
+                return True
+        logger.critical(f'ADB {stage} stayed unavailable after limited recovery. '
+                        'Check the local ADB server and software intercepting local connections.')
+        return False
+
     @retry
     def list_device(self):
-        """
-        Returns:
-            SelectedGrids[AdbDeviceWithStatus]:
-        """
+        """List ADB devices, with bounded recovery for a reset host connection."""
+        for attempt in range(3):
+            try:
+                return self._list_device_once()
+            except ConnectionResetError as error:
+                if not self._recover_adb_reset('host:devices', attempt, error):
+                    raise RequestHumanTakeover from error
+        raise RequestHumanTakeover('ADB host:devices recovery exhausted')
+
+    def _list_device_once(self):
+        """Query the local ADB server without hiding transport failures."""
         devices = []
-        try:
-            with self.adb_client._connect() as c:
-                c.send_command("host:devices")
-                c.check_okay()
-                output = c.read_string_block()
-                for line in output.splitlines():
-                    parts = line.strip().split("\t")
-                    if len(parts) != 2:
-                        continue
-                    device = AdbDeviceWithStatus(self.adb_client, parts[0], parts[1])
-                    devices.append(device)
-        except ConnectionResetError as e:
-            # Happens only on CN users.
-            # ConnectionResetError: [WinError 10054] 远程主机强迫关闭了一个现有的连接。
-            logger.error(e)
-            if '强迫关闭' in str(e):
-                logger.critical('无法连接至ADB服务，请关闭UU加速器、原神私服、以及一些劣质代理软件。'
-                                '它们会劫持电脑上所有的网络连接，包括Alas与模拟器之间的本地连接。')
+        with self.adb_client._connect() as connection:
+            connection.send_command("host:devices")
+            connection.check_okay()
+            output = connection.read_string_block()
+            for line in output.splitlines():
+                parts = line.strip().split("\t")
+                if len(parts) != 2:
+                    continue
+                device = AdbDeviceWithStatus(self.adb_client, parts[0], parts[1])
+                devices.append(device)
         return SelectedGrids(devices)
 
     def detect_device(self):
