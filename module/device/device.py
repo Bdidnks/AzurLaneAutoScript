@@ -16,8 +16,8 @@ from module.device.app_control import AppControl
 from module.device.control import Control
 from module.device.input import Input
 from module.device.screenshot import Screenshot
-from module.exception import (EmulatorNotRunningError, GameNotRunningError, GameStuckError, GameTooManyClickError,
-                              RequestHumanTakeover)
+from module.exception import (AdbConnectionRecoveryError, EmulatorNotRunningError, GameNotRunningError,
+                              GameStuckError, GameTooManyClickError, RequestHumanTakeover)
 from module.handler.assets import GET_MISSION
 from module.logger import logger
 
@@ -196,6 +196,8 @@ class Device(Screenshot, Control, AppControl, Input):
 
         try:
             super().screenshot()
+        except AdbConnectionRecoveryError:
+            raise
         except RequestHumanTakeover:
             if not self.ascreencap_available:
                 logger.error('aScreenCap unavailable on current device, fallback to auto')

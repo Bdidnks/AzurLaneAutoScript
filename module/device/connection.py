@@ -1,6 +1,7 @@
 import ipaddress
 import json
 import logging
+import os
 import re
 import socket
 import subprocess
@@ -23,7 +24,7 @@ from module.device.method.remove_warning import remove_shell_warning
 from module.device.method.utils import (PackageNotInstalled, RETRY_TRIES, get_serial_pair, handle_adb_error,
                                         handle_unknown_host_service, possible_reasons, random_port, recv_all,
                                         retry_sleep)
-from module.exception import EmulatorNotRunningError, RequestHumanTakeover
+from module.exception import AdbConnectionRecoveryError, EmulatorNotRunningError, RequestHumanTakeover
 from module.logger import logger
 from module.map.map_grids import SelectedGrids
 
@@ -44,7 +45,8 @@ def retry(func):
                 return func(self, *args, **kwargs)
             # Can't handle
             except RequestHumanTakeover:
-                break
+                logger.critical(f'Retry {func.__name__}() failed')
+                raise
             # When adb server was killed
             except ConnectionResetError as e:
                 logger.error(e)
@@ -788,7 +790,7 @@ class Connection(ConnectionAttr):
                     break
                 except ConnectionResetError as error:
                     if not self._recover_adb_reset('host:connect', reset_attempt, error):
-                        raise RequestHumanTakeover from error
+                        raise AdbConnectionRecoveryError('ADB host:connect') from error
                     reset_attempt += 1
             logger.info(msg)
             # Connected to 127.0.0.1:59865
@@ -1020,6 +1022,57 @@ class Connection(ConnectionAttr):
         logger.attr('Device Orientation', f'{o} ({Connection._orientation_description.get(o, "Unknown")})')
         return o
 
+    @staticmethod
+    def _windows_adb_listener():
+        """Find the process serving the default local ADB endpoint."""
+        import psutil
+
+        for conn in psutil.net_connections(kind='tcp4'):
+            if conn.status == psutil.CONN_LISTEN and conn.laddr == ('127.0.0.1', 5037) and conn.pid:
+                try:
+                    process = psutil.Process(conn.pid)
+                    if process.name().lower() == 'adb.exe':
+                        return process
+                except psutil.NoSuchProcess:
+                    pass
+                break
+        return None
+
+    def adb_restart_after_reset(self):
+        """Replace an unresponsive local ADB server and surface CLI failures."""
+        windows_default_port = IS_WINDOWS and os.environ.get('ANDROID_ADB_SERVER_PORT', '5037') == '5037'
+        listener = None
+        if windows_default_port:
+            try:
+                listener = self._windows_adb_listener()
+            except Exception as error:
+                logger.warning(f'Cannot identify the local ADB listener: {error}')
+
+        try:
+            self.adb_restart()
+        except (AdbError, OSError) as error:
+            logger.warning(f'ADB protocol shutdown failed: {error}')
+
+        if listener is not None:
+            import psutil
+
+            try:
+                current = self._windows_adb_listener()
+                if current == listener:
+                    # ADB protocol shutdown can fail through both adbutils and adb.exe.
+                    logger.warning(f'ADB listener PID {listener.pid} survived shutdown; terminating it once')
+                    listener.kill()
+                    listener.wait(timeout=5)
+            except psutil.NoSuchProcess:
+                pass
+
+        # Unlike subprocess_run(), retain stderr and check the exit code.
+        command = [self.adb_binary, 'start-server']
+        result = subprocess.run(command, capture_output=True, timeout=10)
+        if result.returncode:
+            detail = result.stderr.decode(errors='replace').strip()
+            raise RuntimeError(f'ADB start-server exited {result.returncode}: {detail}')
+
     def _recover_adb_reset(self, stage, attempt, error):
         """Retry a local ADB socket, then restart the shared server at most once."""
         logger.error(f'ADB {stage} connection reset (attempt {attempt + 1}/3): {error}')
@@ -1037,13 +1090,9 @@ class Connection(ConnectionAttr):
                 self._adb_reset_last_restart = now
                 logger.warning('Local ADB connection still resets; restarting the ADB server once')
                 try:
-                    self.adb_restart()
+                    self.adb_restart_after_reset()
                 except Exception as recovery_error:
                     logger.warning(f'ADB server restart failed: {recovery_error}')
-                try:
-                    self.adb_start_server()
-                except Exception as recovery_error:
-                    logger.warning(f'ADB server start failed: {recovery_error}')
                 time.sleep(1)
                 return True
         logger.critical(f'ADB {stage} stayed unavailable after limited recovery. '
@@ -1058,8 +1107,8 @@ class Connection(ConnectionAttr):
                 return self._list_device_once()
             except ConnectionResetError as error:
                 if not self._recover_adb_reset('host:devices', attempt, error):
-                    raise RequestHumanTakeover from error
-        raise RequestHumanTakeover('ADB host:devices recovery exhausted')
+                    raise AdbConnectionRecoveryError('ADB host:devices') from error
+        raise AdbConnectionRecoveryError('ADB host:devices recovery exhausted')
 
     def _list_device_once(self):
         """Query the local ADB server without hiding transport failures."""

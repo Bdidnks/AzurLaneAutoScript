@@ -26,6 +26,7 @@ class AzurLaneAutoScript:
         # Failure count of tasks
         # Key: str, task name, value: int, failure count
         self.failure_record = {}
+        self._last_emulator_recovery = None
 
     @cached_property
     def config(self):
@@ -41,16 +42,52 @@ class AzurLaneAutoScript:
 
     @cached_property
     def device(self):
+        for attempt in range(2):
+            try:
+                from module.device.device import Device
+                return Device(config=self.config)
+            except AdbConnectionRecoveryError as error:
+                if attempt == 0 and self._recover_emulator(error):
+                    continue
+                logger.critical('Request human takeover')
+                exit(1)
+            except RequestHumanTakeover:
+                logger.critical('Request human takeover')
+                exit(1)
+            except Exception as e:
+                logger.exception(e)
+                exit(1)
+
+    def _recover_emulator(self, error, device=None):
+        from module.device.env import IS_WINDOWS
+
+        if not IS_WINDOWS or not self.config.Error_HandleError:
+            return False
+        if self.stop_event is not None and self.stop_event.is_set():
+            return False
+
+        now = time.monotonic()
+        if self._last_emulator_recovery is not None and now - self._last_emulator_recovery < 300:
+            logger.warning('Emulator recovery skipped: already attempted within five minutes')
+            return False
+
+        from module.device.platform import Platform
+
+        controller = Platform.for_offline_control(self.config, serial=device.serial if device is not None else None)
         try:
-            from module.device.device import Device
-            device = Device(config=self.config)
-            return device
-        except RequestHumanTakeover:
-            logger.critical('Request human takeover')
-            exit(1)
-        except Exception as e:
-            logger.exception(e)
-            exit(1)
+            if controller.emulator_instance is None:
+                logger.warning(f'Cannot identify an emulator to restart for {controller.serial}')
+                return False
+            logger.warning(f'{error}: restarting emulator {controller.serial} once')
+            self._last_emulator_recovery = now
+            return controller.emulator_start(attempts=1)
+        except Exception as recovery_error:
+            logger.exception(recovery_error)
+            return False
+        finally:
+            if self._last_emulator_recovery == now:
+                # Start the cooldown when the attempt finishes, including slow startups.
+                self._last_emulator_recovery = time.monotonic()
 
     @cached_property
     def checker(self):
@@ -114,7 +151,14 @@ class AzurLaneAutoScript:
                 content=f"<{self.config_name}> ScriptError",
             )
             exit(1)
-        except RequestHumanTakeover:
+        except RequestHumanTakeover as error:
+            if isinstance(error, AdbConnectionRecoveryError):
+                device = self.__dict__.get('device')
+                if self._recover_emulator(error, device):
+                    if device is not None:
+                        device.release_resource()
+                    del_cached_property(self, 'device')
+                    return False
             logger.critical('Request human takeover')
             handle_notify(
                 self.config.Error_OnePushConfig,

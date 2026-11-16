@@ -32,7 +32,8 @@ def retry(func):
                 return func(self, *args, **kwargs)
             # Can't handle
             except RequestHumanTakeover:
-                break
+                logger.critical(f'Retry {func.__name__}() failed')
+                raise
             # When adb server was killed
             except ConnectionResetError as e:
                 logger.error(e)
