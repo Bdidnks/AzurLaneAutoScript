@@ -313,9 +313,9 @@ class PlatformWindows(PlatformBase, EmulatorManager):
         logger.info('Emulator start completed')
         return True
 
-    def emulator_start(self):
+    def emulator_start(self, attempts=3):
         logger.hr('Emulator start', level=1)
-        for _ in range(3):
+        for _ in range(attempts):
             # Stop
             if not self._emulator_function_wrapper(self._emulator_stop):
                 return False
@@ -334,7 +334,7 @@ class PlatformWindows(PlatformBase, EmulatorManager):
                 else:
                     return False
 
-        logger.error('Failed to start emulator 3 times, stopped')
+        logger.error(f'Failed to start emulator after {attempts} attempt(s), stopped')
         return False
 
     def emulator_stop(self):

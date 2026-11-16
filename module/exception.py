@@ -67,5 +67,9 @@ class RequestHumanTakeover(Exception):
     pass
 
 
+class AdbConnectionRecoveryError(RequestHumanTakeover):
+    """Local ADB requests still fail after the connection recovery attempts."""
+
+
 class HardNotSatisfied(RequestHumanTakeover):
     pass
